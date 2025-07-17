@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>30-Day Habit Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f4f8; padding: 20px; }
+    h1 { text-align: center; }
+    table { border-collapse: collapse; margin: auto; width: 100%; max-width: 1000px; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+    th { background-color: #007BFF; color: white; position: sticky; top: 0; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    .complete { background-color: #d4edda; }
+    .highlight-week { background-color: #fff3cd !important; }
+    #summary { max-width: 1000px; margin: 30px auto; background: #fff; padding: 15px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <h1>30-Day Habit Tracker</h1>
+  <div style="text-align:center; margin-bottom: 20px;">
+    <label><input type="checkbox" id="backfillToggle"> Enable Backfill Mode</label>
+  </div>
+  <div id="summary">
+    <h2>Summary</h2>
+    <p>Total Days Tracked: <span id="daysTracked">0</span></p>
+    <p>Total Habits Completed: <span id="totalCompleted">0</span></p>
+  </div>
+  <table id="habitTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Drink 8 Glasses of Water</th>
+        <th>Exercise (20+ min)</th>
+        <th>Sleep 7+ Hours</th>
+        <th>No Junk Food</th>
+        <th>Read 10 Pages</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be added here by JS -->
+    </tbody>
+  </table>
+<script>
+  const tableBody = document.querySelector('#habitTable tbody');
+  const today = new Date();
+  const daysTracked = document.getElementById('daysTracked');
+  const totalCompleted = document.getElementById('totalCompleted');
+  let completedHabits = 0;
+
+  const habits = [
+    "Drink 8 Glasses of Water",
+    "Exercise (20+ min)",
+    "Sleep 7+ Hours",
+    "No Junk Food",
+    "Read 10 Pages"
+  ];
+
+  const webhookUrl = "https://script.google.com/macros/s/AKfycbxGOwtJ5t9Gs0nnHXEhdnCrOt2m7Z6admff0u9g0EeHWJDnXZBpuW2Mmce-eJIvO_Y/exec";
+
+  // Shared date variables
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayDateStr = yesterdayDate.toISOString().split('T')[0];
+
+  const twoWeeksAgoDate = new Date();
+  twoWeeksAgoDate.setDate(twoWeeksAgoDate.getDate() - 13);
+  const twoWeeksAgoStr = twoWeeksAgoDate.toISOString().split('T')[0];
+
+  function sendToSheet(date, habit, completed) {
+    fetch(webhookUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, habit, completed })
+    });
+  }
+
+  async function fetchSavedData() {
+    try {
+      const response = await fetch(webhookUrl);
+      const saved = await response.json();
+      const savedMap = new Map();
+      saved.forEach(entry => {
+        const toDateOnly = (iso) => new Date(iso).toISOString().split('T')[0];
+        const clean = (str) => str?.toString().trim();
+        const key = `${toDateOnly(entry.Date)}_${clean(entry.Habit)}`;
+        savedMap.set(key, entry.Completed);
+      });
+      populateTable(savedMap);
+    } catch (error) {
+      console.error("Failed to fetch saved data", error);
+      populateTable(new Map());
+    }
+  }
+
+  function populateTable(savedMap) {
+    const backfillToggle = document.getElementById('backfillToggle');
+
+    backfillToggle.addEventListener('change', function () {
+      document.querySelectorAll('tr[data-date]').forEach(row => {
+        if (row.dataset.date < twoWeeksAgoStr) {
+          row.style.display = this.checked ? '' : 'none';
+        }
+      });
+    });
+
+    for (let i = 0; i < 30; i++) {
+    const loopDate = new Date(today);
+    loopDate.setDate(today.getDate() + i);
+    const dateStr = loopDate.toISOString().split('T')[0];
+
+    const row = document.createElement('tr');
+    row.dataset.date = dateStr;
+
+    // Show today, yesterday, and prior 12 days (last 14 total)
+    if (dateStr < twoWeeksAgoStr) {
+      row.style.display = 'none';
+    } else {
+      row.style.display = '';
+      if (dateStr === yesterdayDateStr) {
+        row.style.backgroundColor = '#ffe8a1';
+      }
+    }
+
+      if (dateStr < twoWeeksAgoStr) {
+        row.style.display = 'none';
+      }
+      if (dateStr === yesterdayDateStr) {
+        row.style.backgroundColor = '#ffe8a1';
+      }
+
+      const dateCell = document.createElement('td');
+      dateCell.textContent = dateStr;
+      row.appendChild(dateCell);
+
+      habits.forEach((habit) => {
+        const cell = document.createElement('td');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.dataset.date = dateStr;
+
+        const toDateOnly = (iso) => new Date(iso).toISOString().split('T')[0];
+        const clean = (str) => str?.toString().trim();
+        const key = `${toDateOnly(dateStr)}_${clean(habit)}`;
+
+        if (savedMap.has(key) && savedMap.get(key)) {
+          checkbox.checked = true;
+          cell.classList.add('complete');
+          completedHabits++;
+        }
+
+        checkbox.addEventListener('change', function () {
+          if (!backfillToggle.checked && dateStr < new Date().toISOString().split('T')[0]) {
+            alert('To edit past dates, enable Backfill Mode.');
+            this.checked = !this.checked;
+            return;
+          }
+
+          if (this.checked) {
+            cell.classList.add('complete');
+            completedHabits++;
+          } else {
+            cell.classList.remove('complete');
+            completedHabits--;
+          }
+
+          totalCompleted.textContent = completedHabits;
+          sendToSheet(dateStr, habit, this.checked);
+        });
+
+        cell.appendChild(checkbox);
+        row.appendChild(cell);
+      });
+
+      tableBody.appendChild(row);
+    }
+
+    daysTracked.textContent = 30;
+    totalCompleted.textContent = completedHabits;
+  }
+
+  fetchSavedData();
+</script>
+</body>
+</html>
