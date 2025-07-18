@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>30-Day Habit Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>30-Day Habit Tracker</h1>
+  <div style="text-align:center; margin-bottom: 20px;">
+    <label><input type="checkbox" id="backfillToggle"> Enable Backfill Mode</label>
+  </div>
+  <div id="summary">
+    <h2>Summary</h2>
+    <p>Total Days Tracked: <span id="daysTracked">0</span></p>
+    <p>Total Habits Completed: <span id="totalCompleted">0</span></p>
+  </div>
+  <table id="habitTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Drink 8 Glasses of Water</th>
+        <th>Exercise (20+ min)</th>
+        <th>Sleep 7+ Hours</th>
+        <th>No Junk Food</th>
+        <th>Read 10 Pages</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be added here by JS -->
+    </tbody>
+  </table>
+  <script src="app.js"></script>
+</body>
+</html>
