@@ -63,7 +63,14 @@ tr:nth-child(even) {
 .highlight-week {
   background-color: var(--highlight-row) !important;
 }
+
+/* --- Enhanced dashboard-style summary --- */
 #summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px 36px;
+  text-align: center;
   max-width: 1000px;
   margin: 30px auto;
   background: var(--bg-alt);
@@ -72,6 +79,19 @@ tr:nth-child(even) {
   border-radius: 10px;
   color: var(--text-accent);
 }
+
+#summary h2 {
+  flex: 1 100%;
+  margin-bottom: 0.7em;
+}
+
+#summary p {
+  flex: 1 0 180px;
+  margin: 6px 0 2px 0;
+  font-size: 1.07em;
+}
+/* --- End enhanced summary --- */
+
 input[type="checkbox"] {
   width: 20px; height: 20px;
   accent-color: var(--checkbox);
@@ -81,10 +101,13 @@ label {
   font-weight: 500;
   letter-spacing: 1px;
 }
+/* Remove highlighting if you wish by deleting this block:
 tr[style*="background-color: #ffe8a1"] {
   background-color: var(--yellow) !important;
   color: #332b1c !important;
 }
+*/
+
 @media (max-width: 650px) {
   table, th, td {
     font-size: 13px;
@@ -92,5 +115,9 @@ tr[style*="background-color: #ffe8a1"] {
   }
   #summary {
     padding: 10px 8px;
+    gap: 12px 8px;
+  }
+  #summary p {
+    font-size: 0.98em;
   }
 }
